@@ -1,9 +1,31 @@
 # frozen_string_literal: true
 
 require 'set'
+require 'fileutils'
+
+# PREFIX_DEST_PATH=/demo bundle exec rake build
 
 desc 'Generates the code for every service'
 task 'build' do
+  if $PREFIX_DEST_PATH
+    Dir.chdir($REAL_GEMS_DIR) do
+      # There are a series of files we need to copy inorder for
+      # the code generator to emit identical code that our
+      # upstream generates.
+      ["./**/VERSION", "./**/CHANGELOG.md", "./**/LICENSE.txt",
+       "./**/customizations.rb", "./**/customizations/**",
+       "./**/client_spec.rb", "./**/resource_spec.rb",
+       "./**/client.feature",
+       "./**/step_definitions.rb"].each do |pattern|
+        Dir.glob(pattern).each do |src_file|
+          next if File.directory? src_file
+          dest_file = "#{$GEMS_DIR}/#{src_file}"
+          FileUtils.mkdir_p(File.dirname dest_file)
+          FileUtils.cp(src_file, dest_file, :verbose => true)
+        end
+      end
+    end
+  end
   BuildTools::Services.each do |service|
     Rake::Task["build:aws-sdk-#{service.identifier}"].invoke
   end
