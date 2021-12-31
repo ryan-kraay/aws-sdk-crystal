@@ -1,5 +1,34 @@
 # frozen_string_literal: true
 
+# Taken from objects.cr from v 0.7.6
+  # Defines new_method as an alias of old_method.
+  #
+  # This creates a new method new_method that invokes old_method.
+  #
+  # Note that due to current language limitations this is only useful
+  # when neither named arguments nor blocks are involved.
+  #
+  # ```
+  # class Person
+  #   getter name
+  #
+  #   def initialize(@name)
+  #   end
+  #
+  #   alias_method full_name, name
+  # end
+  #
+  # person = Person.new "John"
+  # person.name #=> "John"
+  # person.full_name #=> "John"
+  # ```
+  macro alias_method(new_method, old_method)
+    def {{new_method.id}}(*args)
+      {{old_method.id}}(*args)
+    end
+  end
+
+
 module Seahorse
   module Client
     module Http
@@ -25,12 +54,13 @@ module Seahorse
       #
       class Headers
 
-        include Enumerable
+        include Enumerable(Tuple(String, String))
 
         # @api private
-        def initialize(headers = {})
-          @data = {}
-          headers.each_pair do |key, value|
+        def initialize(headers = {} of String => String)
+          @data = {} of String => String
+          #headers.each_pair do |key, value|
+          headers.each do |key, value|
             self[key] = value
           end
         end
@@ -50,7 +80,7 @@ module Seahorse
         # @param [Hash] headers
         # @return [Headers]
         def update(headers)
-          headers.each_pair do |k, v|
+          headers.each do |k, v|
             self[k] = v
           end
           self
@@ -62,7 +92,7 @@ module Seahorse
         end
 
         def clear
-          @data = {}
+          @data = {} of String => String
         end
 
         # @return [Array<String>]
@@ -84,30 +114,45 @@ module Seahorse
         # @yieldparam [String] key
         # @yieldparam [String] value
         # @return [nil]
-        def each(&block)
-          if block_given?
-            @data.each_pair do |key, value|
-              yield(key, value)
-            end
-            nil
-          else
-            @data.enum_for(:each)
+        # RKR: https://crystal-lang.org/api/1.2.2/Enumerable.html#each%28%26%3AT-%3E%29-instance-method
+        # Hash does not support Enumeration: https://github.com/crystal-lang/crystal/issues/132
+        def each(&block : Tuple(String, String) -> )
+          @data.each do |key, value|
+            yield({key, value})
           end
+          nil
         end
-        alias each_pair each
+        def each
+          @data.each
+        end
+#        def each(&block)
+#          if block_given?
+#            @data.each_pair do |key, value|
+#              yield(key, value)
+#            end
+#            nil
+#          else
+#            @data.enum_for(:each)
+#          end
+#        end
+#        TODO: each_pair is redunant and not kept in Crystal
+#        alias_method each_pair, each
+        
+        alias_method values, each_pair
 
         # @return [Boolean] Returns `true` if the header is set.
-        def key?(key)
-          @data.key?(key.to_s.downcase)
+        def has_key?(key)
+          @data.has_key?(key.to_s.downcase)
         end
-        alias has_key? key?
-        alias include? key?
+        # RKR: Crystal uses has_key and not key?
+        #alias_method has_key?, key?
+        #alias_method include?, key?
 
         # @return [Hash]
         def to_hash
           @data.dup
         end
-        alias to_h to_hash
+        alias_method to_h, to_hash
 
         # @api private
         def inspect
