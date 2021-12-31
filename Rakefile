@@ -2,6 +2,7 @@
 
 # If defined, this path must begin with a '/'
 $PREFIX_DEST_PATH = ENV.fetch("PREFIX_DEST_PATH", "")
+$DEST_SUFFIX = ENV.fetch("DEST_SUFFIX", "rb")
 
 $REPO_ROOT = File.dirname(__FILE__)
 $REAL_GEMS_DIR = "#{$REPO_ROOT}/gems"
