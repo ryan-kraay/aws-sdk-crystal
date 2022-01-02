@@ -12,3 +12,6 @@ coverage
 *.DS_Store
 .idea
 .ruby-version
+/lib
+/.shards
+/.crystal

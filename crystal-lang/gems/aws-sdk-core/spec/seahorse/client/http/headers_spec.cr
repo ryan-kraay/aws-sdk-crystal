@@ -1,15 +1,7 @@
 # frozen_string_literal: true
 
-#require_relative '../../../spec_helper'
-require "spectator"
-require "./headers"
-#require "../../../../lib/seahorse/client/http/headers.rb"
+require "../../../spec_helper"
 
-#describe Ktest do
-#  it "works" do
-#    false.should eq(true)
-#  end
-#end
 module Seahorse
   module Client
     module Http
