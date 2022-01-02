@@ -79,7 +79,7 @@ module Seahorse
             expect(ret).to eq(nil)
           end
 
-          it "returns an Enumerator if a block is not given" do
+          skip "returns an Enumerator if a block is not given" do
 #            #expect(headers.each).to be_kind_of(Enumerator)
             expect(headers.each).to be_kind_of(Iterable({String, String}))
           end
