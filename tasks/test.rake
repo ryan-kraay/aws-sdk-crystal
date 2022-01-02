@@ -2,10 +2,10 @@
 
 require 'rspec/core/rake_task'
 
-###
-### spec / unit tests
-###
-#
+##
+## spec / unit tests
+##
+
 #desc 'Executes every spec file, one at a time.'
 #task 'test:spec:each' do
 #  failures = []
@@ -20,12 +20,12 @@ require 'rspec/core/rake_task'
 #  end
 #  abort(msg) unless failures.empty?
 #end
-#
+
 #rule /test:spec:aws-sdk-code-generator$/ do |task|
 #  # this package is outside of the gems folder
 #  sh('bundle exec rspec build_tools/aws-sdk-code-generator/spec')
 #end
-#
+
 desc 'Executes specs for a single gem, e.g. test:spec:aws-sdk-s3'
 task 'test:spec:*'
 
@@ -38,24 +38,30 @@ rule /test:spec:.+$/ do |task|
   end
 end
 
-#desc 'Execute spec tests.'
-#task 'test:spec' do
-#  Dir.glob('**/spec').tap do |spec_file_list|
-#    sh("bundle exec rspec #{spec_file_list.join(' ')}")
-#  end
-#end
-#
-###
-### feature / integration tests
-###
-#
+desc 'Execute spec tests.'
+task 'test:spec' do
+  spec_glob = "**/spec"
+  spec_glob = ".#{$PREFIX_DEST_PATH}/#{spec_glob}" if $PREFIX_DEST_PATH
+  Dir.glob(spec_glob).tap do |spec_file_list|
+    if $PREFIX_DEST_PATH
+      sh("crystal spec #{spec_file_list.join(' ')}")
+    else
+      sh("bundle exec rspec #{spec_file_list.join(' ')}")
+    end
+  end
+end
+
+##
+## feature / integration tests
+##
+
 #rule /^test:features:.+$/ do |task|
 #  dir = "gems/#{task.name.split(':').last}/features"
 #  sh("bundle exec cucumber -t 'not @veryslow' -r #{dir} #{dir} --publish-quiet")
 #end
-#
-#desc 'Executes integration tests.'
-#task 'test:features' do
+
+desc 'Executes integration tests.'
+task 'test:features' do
 #  failures = []
 #  Dir.glob('gems/*/features').each do |dir|
 #    sh("bundle exec cucumber -t 'not @veryslow' -r #{dir} #{dir} --publish-quiet") do |ok, _|
@@ -63,8 +69,8 @@ end
 #    end
 #  end
 #  abort('one or more test suites failed: %s' % [failures.join(', ')]) unless failures.empty?
-#end
-#
-#desc 'Runs unit and integration tests after rebuilding gems'
-#task 'test' => ['build', 'test:spec', 'test:features']
-#task 'default' => 'test'
+end
+
+desc 'Runs unit and integration tests after rebuilding gems'
+task 'test' => ['build', 'test:spec', 'test:features']
+task 'default' => 'test'
